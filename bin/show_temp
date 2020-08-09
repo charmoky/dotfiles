@@ -1,0 +1,14 @@
+#!/bin/bash
+
+CPU=0
+CPU_c=0
+for i in $(ls /sys/class/thermal | grep thermal_zone); do
+#    if [[ $i != "thermal_zone0" ]]; then
+        CPU=$((CPU+$(cat /sys/class/thermal/$i/temp)))
+        CPU_c=$((CPU_c+1))
+#    fi
+done
+
+CPU=$((CPU/(1000*$CPU_c)))
+echo "$CPU°C"
+
