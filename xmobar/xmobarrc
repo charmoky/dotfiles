@@ -1,0 +1,107 @@
+Config { 
+	
+	font    = "xft:Mononoki:weight=bold:pixelsize=25:antialias=true:hinting=true"
+    , additionalFonts = [ "xft:Mononoki Nerd Font:pixelsize=16:antialias=true:hinting=true"
+                        , "xft:Mononoki Nerd Font:pixelsize=16:antialias=true:hinting=true"
+                        , "xft:FontAwesome:pixelsize=13"
+                        ]
+    , bgColor = "#292d3e"
+    , fgColor = "#f07178"
+
+   , position = Static { xpos = 30 , ypos = 10, width = 3140, height = 30 }
+      , border =      BottomB 
+      , iconRoot =    "./.xmonad/icons"
+
+   -- layout
+   , sepChar =  "%"   -- delineator between plugin names and straight text
+   , alignSep = "}{"  -- separator between left-right alignment
+   , template = " %StdinReader% } { <fc=#666666><fn=2>|</fn></fc>  <fc=#b3afc2>%dynnetwork%</fc>
+   <fc=#666666><fn=2>|</fn></fc>  <fc=#FF5555>%memory%</fc>  <fc=#666666><fn=2>|</fn></fc>  <fc=#FFB86C>%multicpu%
+   %multicoretemp%</fc>  <fc=#666666><fn=2>|</fn></fc>  <fc=#82AAFF>%battery%</fc>  <fc=#666666><fn=2>|</fn></fc>
+   <fc=#e1acff>%default:Master%</fc> <fc=#666666><fn=2>|</fn></fc> <fc=#8BE9FD>%date% %time% </fc>"
+
+   -- general behavior
+   , lowerOnStart =     True    -- send to bottom of window stack on start
+   , hideOnStart =      False   -- start with window unmapped (hidden)
+   , allDesktops =      True    -- show on all desktops
+   , overrideRedirect = True    -- set the Override Redirect flag (Xlib)
+   , pickBroadest =     False   -- choose widest display (multi-monitor)
+   , persistent =       False   -- enable/disable hiding (True = disabled)
+
+
+   -- plugins
+   --   Numbers can be automatically colored according to their value. xmobar
+   --   decides color based on a three-tier/two-cutoff system, controlled by
+   --   command options:
+   --     --Low sets the low cutoff
+   --     --High sets the high cutoff
+   --
+   --     --low sets the color below --Low cutoff
+   --     --normal sets the color between --Low and --High cutoffs
+   --     --High sets the color above --High cutoff
+   --
+   --   The --template option controls how the plugin is displayed. Text
+   --   color can be set by enclosing in <fc></fc> tags. For more details
+   --   see http://projects.haskell.org/xmobar/#system-monitor-plugins.
+   , commands = 
+
+        -- network activity monitor (dynamic interface resolution)
+        [ Run DynNetwork     [ "--template" , "<tx>kB/s <fc=#008080><icon=net_up_20.xpm/><icon=net_down_20.xpm/></fc> <rx>kB/s" ] 10
+
+
+        -- cpu activity monitor
+        , Run MultiCpu       [ "--template" , "<icon=computer_20.xpm/> <total0>%"
+                             , "--Low"      , "50"         -- units: %
+                             , "--High"     , "85"         -- units: %
+                             , "--low"      , "#FFB86C"
+                             , "--normal"   , "#FFB86C"
+                             , "--high"     , "#ff0000"
+                             ] 10
+
+        -- cpu core temperature monitor
+        , Run MultiCoreTemp  [ "--template" , "<avg>C"
+                             , "--Low"      , "60"        -- units: C
+                             , "--High"     , "70"        -- units: C
+                             , "--low"      , "#FFB86C"
+                             , "--normal"   , "#FFB86C"
+                             , "--high"     , "#ff0000"
+                             ] 50
+                          
+        -- memory usage monitor
+        --, Run Memory ["-t", "mem: <used>M (<usedratio>%)"] 20
+        , Run Memory         [ "--template" , "<icon=memory-icon_20.xpm/> <used>M <usedratio>%" ] 10
+
+        -- battery monitor
+        , Run Battery        [ "--template" , "Batt: <acstatus>"
+                             , "--" -- battery specific options
+                                       -- discharging status
+                                       , "-o"	, "<left>% (<timeleft>)"
+                                       -- AC "on" status
+                                       , "-O"	, "Charging <left>% (<timeleft>)"
+                                       -- charged status
+                                       , "-i"	, "Charged"
+                             ] 50
+
+        -- date indicator 
+        , Run Date           "<icon=calendar-clock-icon_20.xpm/> %a %d-%m-%Y" "date" 10
+
+        -- time indicator
+        , Run Date           "%T" "time" 10
+
+          -- Runs a standard shell command 'uname -r' to get kernel version
+        , Run Com "uname" ["-r"] "" 3600
+
+        -- volume indicator
+        , Run Volume "default" "Master" 
+                             [ "--template" , "<status> <volume>%", "--"
+                             , "--on"       , "<fc=#FFFFFF><icon=spkr_01.xbm/></fc>"
+                             , "--off"      , "<fc=#FFFFFF><icon=mute.xbm/></fc>"
+                             , "--onc"      , "#008080"
+                             , "--offc"     , "#008080"
+                             ] 1
+
+        , Run StdinReader
+
+       ]
+   }
+
