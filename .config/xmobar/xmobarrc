@@ -20,8 +20,11 @@ Config {
    <fc=#FFB86C>%multicpu% %multicoretemp%</fc>   <fc=#666666><fn=2>|</fn></fc>
    <fc=#82AAFF>%battery%</fc>   <fc=#666666><fn=2>|</fn></fc>
    <fc=#b3afc2>%wi% %dynnetwork%</fc>   <fc=#666666><fn=2>|</fn></fc>
-   <fc=#e1acff>%default:Master%</fc>   <fc=#666666><fn=2>|</fn></fc>
-   <fc=#8BE9FD>%date% %time% </fc>"
+   <fc=#e1acff>%default:Master%</fc> 
+   "
+   -- <fc=#666666><fn=2>|</fn></fc>
+   -- <fc=#8BE9FD>%date% %time% </fc>
+   
 
    -- general behavior
    , lowerOnStart =     True    -- send to bottom of window stack on start
@@ -86,10 +89,10 @@ Config {
                              ] 50
 
         -- date indicator 
-        , Run Date           "<icon=calendar-clock-icon_20.xpm/> %a %d-%m-%Y" "date" 10
+        -- , Run Date           "<icon=calendar-clock-icon_20.xpm/> %a %d-%m-%Y" "date" 10
 
         -- time indicator
-        , Run Date           "%T" "time" 10
+        -- , Run Date           "%T" "time" 10
 
         -- volume indicator
         , Run Volume "default" "Master" 
