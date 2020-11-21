@@ -13,11 +13,15 @@ import Data.Monoid
 
 import System.Exit
 
+
 import XMonad.Actions.CycleWS
+import XMonad.Actions.MouseResize
+
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.SetWMName
+import XMonad.Hooks.ServerMode
 
 import XMonad.Util.EZConfig -- optional, but helpful
 import XMonad.Util.SpawnOnce
@@ -32,6 +36,9 @@ import XMonad.Layout.Spiral
 import XMonad.Layout.ResizableTile
 import XMonad.Layout.Tabbed
 import XMonad.Layout.ThreeColumns
+import XMonad.Layout.Simplest
+import XMonad.Layout.MultiToggle
+import XMonad.Layout.MultiToggle.Instances
 
     -- Layouts modifiers
 import XMonad.Layout.Gaps
@@ -44,9 +51,13 @@ import XMonad.Layout.NoBorders
 import XMonad.Layout.Renamed (renamed, Rename(Replace))
 import XMonad.Layout.ShowWName
 import XMonad.Layout.Spacing
+import XMonad.Layout.SubLayouts
 import XMonad.Layout.WindowArranger (windowArrange, WindowArrangerMsg(..))
 import qualified XMonad.Layout.ToggleLayouts as T (toggleLayouts, ToggleLayout(Toggle))
 import qualified XMonad.Layout.MultiToggle as MT (Toggle(..))
+import XMonad.Layout.WindowNavigation
+import XMonad.Layout.WindowArranger (windowArrange, WindowArrangerMsg(..))
+
 
 import XMonad.Hooks.ManageDocks
 
@@ -72,6 +83,9 @@ myFont = "xft:Mononoki Nerd Font:bold:size=11:antialias=true:hinting=true"
 -- Whether focus follows the mouse pointer.
 myFocusFollowsMouse :: Bool
 myFocusFollowsMouse = True
+
+myEditor :: String
+myEditor = myTerminal ++ " -e vim "    -- Sets vim as editor for tree select
 
 -- Whether clicking on a window to focus also passes the click to the window
 myClickJustFocuses :: Bool
@@ -140,8 +154,8 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
      -- Rotate through the available layout algorithms
     , ((modm,               xK_space ), sendMessage NextLayout)
 
-    --  Reset the layouts on the current workspace to default
-    , ((modm .|. shiftMask, xK_space ), setLayout $ XMonad.layoutHook conf)
+    -- Toggle focus in fullscreen
+    , ((modm .|. shiftMask, xK_space ), sendMessage $ XMonad.Layout.MultiToggle.Toggle FULL)
 
     -- Resize viewed windows to the correct size
     , ((modm,               xK_n     ), refresh)
@@ -172,10 +186,12 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
     -- Expand the master area
     , ((modm,               xK_l     ), sendMessage Expand)
-
-    -- Push window back into tiling
-    , ((modm,               xK_t     ), withFocused $ windows . W.sink)
     
+    -- Floating windows
+    --, ((modm,               xK_f     ), sendMessage (T.Toggle "floats")) -- Toggles my 'floats' layout
+    , ((modm,               xK_t     ), withFocused $ windows . W.sink)  -- Push floating window back to tile
+    --, ((modm .|. shiftMask, xK_t     ), sinkAll)                       -- Push ALL floating windows to tile
+
     -- Increment the number of windows in the master area
     , ((modm              , xK_comma ), sendMessage (IncMasterN 1))
 
@@ -266,7 +282,7 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm, button2), (\w -> focus w >> windows W.shiftMaster))
 
     -- mod-button3, Set the window to floating mode and resize by dragging
-    , ((modm, button3), (\w -> focus w >> mouseResizeWindow w
+    , ((modm .|. shiftMask, button1), (\w -> focus w >> mouseResizeWindow w
                                        >> windows W.shiftMaster))
 
     -- you may also bind events to the mouse scroll wheel (button4 and button5)
@@ -284,37 +300,84 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 -- which denotes layout choice.
 --
 mySpacing :: Integer -> l a -> XMonad.Layout.LayoutModifier.ModifiedLayout Spacing l a
-mySpacing i = spacingRaw False (Border 30 30 30 30) True (Border i i i i) True
+mySpacing i = spacingRaw False (Border i i i i) True (Border i i i i) True
 -- Below is a variation of the above except no borders are applied
 -- if fewer than two windows. So a single window has no gaps.
 mySpacing' :: Integer -> l a -> XMonad.Layout.LayoutModifier.ModifiedLayout Spacing l a
-mySpacing' i = spacingRaw True (Border 30 30 30 30) True (Border i i i i) True
+mySpacing' i = spacingRaw True (Border i i i i) True (Border i i i i) True
 
 --layouts
 tall     = renamed [Replace "tall"]
            $ limitWindows 12
+           $ windowNavigation
+           $ addTabs shrinkText myTabTheme
+           $ subLayout [] (smartBorders Simplest)
            $ mySpacing 20
            $ ResizableTall 1 (3/100) (1/2) []
+tall_nosp = renamed [Replace "tall_nosp"]
+           $ windowNavigation
+           $ addTabs shrinkText myTabTheme
+           $ subLayout [] (smartBorders Simplest)
+           $ limitWindows 12
+           $ mySpacing 0
+           $ ResizableTall 1 (3/100) (1/2) []
 grid     = renamed [Replace "grid"]
+           $ windowNavigation
+           $ addTabs shrinkText myTabTheme
+           $ subLayout [] (smartBorders Simplest)
            $ limitWindows 12
            $ mySpacing 20
            $ mkToggle (single MIRROR)
            $ Grid (16/10)
+floats   = renamed [Replace "floats"]
+           $ windowNavigation
+           $ addTabs shrinkText myTabTheme
+           $ subLayout [] (smartBorders Simplest)
+           $ limitWindows 20 simplestFloat
 spirals  = renamed [Replace "spirals"]
-           $ mySpacing' 20
+           $ mySpacing' 0
+           -- $ windowNavigation
+           -- $ addTabs shrinkText myTabTheme
+           -- $ subLayout [] (smartBorders Simplest)
            $ spiral (6/7)
 threeCol = renamed [Replace "threeCol"]
+           -- $ windowNavigation
+           -- $ addTabs shrinkText myTabTheme
+           -- $ subLayout [] (smartBorders Simplest)
            $ limitWindows 7
            $ mySpacing' 4
            $ ThreeCol 1 (3/100) (1/2)
 threeRow = renamed [Replace "threeRow"]
+           -- $ windowNavigation
+           -- $ addTabs shrinkText myTabTheme
+           -- $ subLayout [] (smartBorders Simplest)
            $ limitWindows 7
            $ mySpacing' 4
            -- Mirror takes a layout and rotates it by 90 degrees.
            -- So we are applying Mirror to the ThreeCol layout.
            $ Mirror
            $ ThreeCol 1 (3/100) (1/2)
-myLayout = tall ||| Mirror tall ||| spirals ||| grid 
+--tabs     = renamed [Replace "tabs"]
+--           -- I cannot add spacing to this layout because it will
+--           -- add spacing between window and tabs which looks bad.
+--           $ tabbed shrinkText myTabTheme
+
+myTabTheme = def { fontName            = myFont
+                 , activeColor         = "#46d9ff"
+                 , inactiveColor       = "#313846"
+                 , activeBorderColor   = "#46d9ff"
+                 , inactiveBorderColor = "#282c34"
+                 , activeTextColor     = "#282c34"
+                 , inactiveTextColor   = "#d0d0d0"
+                 }
+
+myLayout = tall 
+       ||| tall_nosp 
+--       ||| spirals 
+--       ||| floats
+
+-- The layout hook
+myLayoutHook = mkToggle (NOBORDERS ?? FULL ?? EOT) $ (avoidStruts $ mouseResize $ windowArrange $ T.toggleLayouts floats $ mkToggle (NBFULL ?? NOBORDERS ?? EOT) myLayout)
 
 ------------------------------------------------------------------------
 -- Window rules:
@@ -366,6 +429,7 @@ myLogHook = return ()
 -- Start nitrogen once on boot, restart picom every time
 myStartupHook = do 
     spawnOnce "nitrogen --restore &"
+    spawnOnce "redshift -l 50.51:4.20 &"
     spawnOnce "picom --config /home/mal/.config/picom.conf --experimental-backends &"
     setWMName "LG3D"
 
@@ -391,6 +455,11 @@ main = do
             , ppOrder  = \(ws:l:t:ex) -> [ws,l]++ex++[t]
         }
         , manageHook = manageDocks <+> manageHook def
+        -- , handleEventHook = handleEventHook def <+> fullscreenEventHook
+        , handleEventHook    = serverModeEventHookCmd
+                               <+> serverModeEventHook
+                               <+> serverModeEventHookF "XMONAD_PRINT" (io . putStrLn)
+                               <+> docksEventHook
     }
 
 
@@ -416,9 +485,10 @@ defaults = def {
         mouseBindings      = myMouseBindings,
 
       -- hooks, layouts
-        layoutHook         = (avoidStruts  $ myLayout) ||| Full,
+        layoutHook         = myLayoutHook,
         manageHook         = myManageHook,
         handleEventHook    = myEventHook,
+ 
         logHook            = myLogHook,
         startupHook        = myStartupHook
     }
