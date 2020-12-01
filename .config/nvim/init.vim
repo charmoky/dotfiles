@@ -1,10 +1,3 @@
-"  ____ _____ 
-" |  _ \_   _|  Derek Taylor (DistroTube)
-" | | | || |    http://www.youtube.com/c/DistroTube
-" | |_| || |    http://www.gitlab.com/dwt1/
-" |____/ |_|
-"        
-" A customized init.vim for neovim (https://neovim.io/)     
 
 set nocompatible              " be iMproved, required
 filetype off                  " required
@@ -16,28 +9,26 @@ filetype off                  " required
 call plug#begin('~/.vim/plugged')
 
 "{{ The Basics }}
-    Plug 'gmarik/Vundle.vim'                           " Vundle
     Plug 'itchyny/lightline.vim'                       " Lightline statusbar
-    Plug 'suan/vim-instant-markdown', {'rtp': 'after'} " Markdown Preview
-    Plug 'frazrepo/vim-rainbow'
+    "Plug 'suan/vim-instant-markdown', {'rtp': 'after'} " Markdown Preview
+    Plug 'ludovicchabant/vim-gutentags'                " file navigation
 "{{ File management }}
     Plug 'vifm/vifm.vim'                               " Vifm
     Plug 'scrooloose/nerdtree'                         " Nerdtree
     Plug 'tiagofumo/vim-nerdtree-syntax-highlight'     " Highlighting Nerdtree
     Plug 'ryanoasis/vim-devicons'                      " Icons for Nerdtree
+    Plug 'kien/ctrlp.vim'
 "{{ Productivity }}
-    Plug 'vimwiki/vimwiki'                             " VimWiki 
     Plug 'jreybert/vimagit'                            " Magit-like plugin for vim
+    Plug 'rhysd/vim-clang-format'
+    Plug 'ludovicchabant/vim-gutentags'
+    "Plug 'neovim/nvim-lspconfig'
 "{{ Tim Pope Plugins }}
     Plug 'tpope/vim-surround'                          " Change surrounding marks
 "{{ Syntax Highlighting and Colors }}
-    Plug 'PotatoesMaster/i3-vim-syntax'                " i3 config highlighting
     Plug 'kovetskiy/sxhkd-vim'                         " sxhkd highlighting
     Plug 'vim-python/python-syntax'                    " Python highlighting
-    Plug 'ap/vim-css-color'                            " Color previews for CSS
 "{{ Junegunn Choi Plugins }}
-    Plug 'junegunn/goyo.vim'                           " Distraction-free viewing
-    Plug 'junegunn/limelight.vim'                      " Hyperfocus on a range
     Plug 'junegunn/vim-emoji'                          " Vim needs emojis!
 
 call plug#end()
@@ -69,19 +60,24 @@ set number relativenumber       " Display line numbers
 set clipboard=unnamedplus       " Copy/paste between vim and other programs.
 syntax enable
 let g:rehash256 = 1
+set noerrorbells
+set title
+set confirm
+
+syntax on
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Remap Keys
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Remap ESC to ii
-:imap ii <Esc>
+":imap ii <Esc>
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Status Line
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " The lightline.vim theme
 let g:lightline = {
-      \ 'colorscheme': 'darcula',
+      \ 'colorscheme': 'wombat',
       \ }
 
 " Always show statusline
@@ -94,9 +90,22 @@ set noshowmode
 " => Text, tab and indent related
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set expandtab                   " Use spaces instead of tabs.
-set smarttab                    " Be smart using tabs ;)
+"set smarttab                    " Be smart using tabs ;)
 set shiftwidth=4                " One tab == four spaces.
 set tabstop=4                   " One tab == four spaces.
+set autoindent
+autocmd FileType make set noexpandtab
+
+set pastetoggle=<F3>            " paste better with F3
+
+nmap <C-N> :set invnumber<CR>
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Search
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set hlsearch
+set smartcase
+set ignorecase
+set shiftround
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => NERDTree
@@ -114,23 +123,23 @@ let g:NERDTreeWinSize=38
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Colors and Theming
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-highlight LineNr           ctermfg=8    ctermbg=none    cterm=none
-highlight CursorLineNr     ctermfg=7    ctermbg=8       cterm=none
-highlight VertSplit        ctermfg=0    ctermbg=8       cterm=none
-highlight Statement        ctermfg=2    ctermbg=none    cterm=none
-highlight Directory        ctermfg=4    ctermbg=none    cterm=none
-highlight StatusLine       ctermfg=7    ctermbg=8       cterm=none
-highlight StatusLineNC     ctermfg=7    ctermbg=8       cterm=none
-highlight NERDTreeClosable ctermfg=2
-highlight NERDTreeOpenable ctermfg=8
-highlight Comment          ctermfg=4    ctermbg=none    cterm=italic
-highlight Constant         ctermfg=12   ctermbg=none    cterm=none
-highlight Special          ctermfg=4    ctermbg=none    cterm=none
-highlight Identifier       ctermfg=6    ctermbg=none    cterm=none
-highlight PreProc          ctermfg=5    ctermbg=none    cterm=none
-highlight String           ctermfg=12   ctermbg=none    cterm=none
-highlight Number           ctermfg=1    ctermbg=none    cterm=none
-highlight Function         ctermfg=1    ctermbg=none    cterm=none
+"highlight LineNr           ctermfg=8    ctermbg=none    cterm=none
+"highlight CursorLineNr     ctermfg=7    ctermbg=8       cterm=none
+"highlight VertSplit        ctermfg=0    ctermbg=8       cterm=none
+"highlight Statement        ctermfg=2    ctermbg=none    cterm=none
+"highlight Directory        ctermfg=4    ctermbg=none    cterm=none
+"highlight StatusLine       ctermfg=7    ctermbg=8       cterm=none
+"highlight StatusLineNC     ctermfg=7    ctermbg=8       cterm=none
+"highlight NERDTreeClosable ctermfg=2
+"highlight NERDTreeOpenable ctermfg=8
+"highlight Comment          ctermfg=4    ctermbg=none    cterm=italic
+"highlight Constant         ctermfg=12   ctermbg=none    cterm=none
+"highlight Special          ctermfg=4    ctermbg=none    cterm=none
+"highlight Identifier       ctermfg=6    ctermbg=none    cterm=none
+"highlight PreProc          ctermfg=5    ctermbg=none    cterm=none
+"highlight String           ctermfg=12   ctermbg=none    cterm=none
+"highlight Number           ctermfg=1    ctermbg=none    cterm=none
+"highlight Function         ctermfg=1    ctermbg=none    cterm=none
 " highlight WildMenu         ctermfg=0       ctermbg=80      cterm=none
 " highlight Folded           ctermfg=103     ctermbg=234     cterm=none
 " highlight FoldColumn       ctermfg=103     ctermbg=234     cterm=none
@@ -158,6 +167,9 @@ highlight Function         ctermfg=1    ctermbg=none    cterm=none
 " highlight htmlEndTag       ctermfg=114     ctermbg=none    cterm=none
 " highlight xmlEndTag        ctermfg=114     ctermbg=none    cterm=none
 
+colorscheme desert 
+colorscheme iceberg
+
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Vifm
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -170,8 +182,8 @@ map <Leader>tv :TabVifm<CR>
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => VimWiki
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-let g:vimwiki_list = [{'path': '~/vimwiki/',
-                      \ 'syntax': 'markdown', 'ext': '.md'}]
+"let g:vimwiki_list = [{'path': '~/vimwiki/',
+"                      \ 'syntax': 'markdown', 'ext': '.md'}]
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Vim-Instant-Markdown
@@ -189,7 +201,7 @@ map <Leader>tt :vnew term://fish<CR>
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Mouse Scrolling
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-set mouse=nicr
+set mouse=a
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Splits and Tabbed Files
@@ -197,10 +209,10 @@ set mouse=nicr
 set splitbelow splitright
 
 " Remap splits navigation to just CTRL + hjkl
-nnoremap <C-h> <C-w>h
-nnoremap <C-j> <C-w>j
-nnoremap <C-k> <C-w>k
-nnoremap <C-l> <C-w>l
+"nnoremap <C-h> <C-w>h
+"nnoremap <C-j> <C-w>j
+"nnoremap <C-k> <C-w>k
+"nnoremap <C-l> <C-w>l
 
 " Make adjusing split sizes a bit more friendly
 noremap <silent> <C-Left> :vertical resize +3<CR>
@@ -227,4 +239,21 @@ set guioptions-=m  "remove menu bar
 set guioptions-=T  "remove toolbar
 set guioptions-=r  "remove right-hand scroll bar
 set guioptions-=L  "remove left-hand scroll bar
+
+" Ctrlp ignore build directories
+let g:ctrlp_user_command = ['.git/', 'git --git-dir=%s/.git ls-files -oc --exclude-standard']
+
+" Gutentags config (ctags)
+"let g:gutentags_ctags_exclude_wildignore = 0
+let g:gutentags_cache_dir = '~/.cache/gutentags'
+let g:gutentags_exclude_ctags = [ '*/build/*', '*/buildroot/*', '*/vivado/*' ]
+nmap <C-g> <C-]>
+nmap <C-B> <C-O>
+
+" Clang-format
+nnoremap <Leader>f :<C-u>ClangFormat<CR>
+
+" xdc as tcl 
+au BufRead,BufNewFile *.xdc setfiletype tcl
+
 
