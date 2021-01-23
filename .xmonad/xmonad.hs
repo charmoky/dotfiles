@@ -110,7 +110,7 @@ myModMask       = mod4Mask
 --
 -- > workspaces = ["web", "irc", "code" ] ++ map show [4..9]
 --
-myWorkspaces    = ["dev","www","mus","msg","5","6","7","8","9"]
+myWorkspaces    = ["dev","www","files","mus","5","6","7","8","9"]
 
 -- Border colors for unfocused and focused windows, respectively.
 --
@@ -301,20 +301,27 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 --
 mySpacing :: Integer -> l a -> XMonad.Layout.LayoutModifier.ModifiedLayout Spacing l a
 mySpacing i = spacingRaw False (Border i i i i) True (Border i i i i) True
--- Below is a variation of the above except no borders are applied
--- if fewer than two windows. So a single window has no gaps.
-mySpacing' :: Integer -> l a -> XMonad.Layout.LayoutModifier.ModifiedLayout Spacing l a
-mySpacing' i = spacingRaw True (Border i i i i) True (Border i i i i) True
+mySpacing2 :: Integer -> l a -> XMonad.Layout.LayoutModifier.ModifiedLayout Spacing l a
+mySpacing2 i = spacingRaw False (Border 40 350 40 600) True (Border i i i i) True
+mySpacing' :: Integer -> Integer -> l a -> XMonad.Layout.LayoutModifier.ModifiedLayout Spacing l a
+mySpacing' i j = spacingRaw False (Border i i i i) True (Border j j j j) True
 
 --layouts
-tall     = renamed [Replace "tall"]
+tall_small = renamed [Replace "small"]
+           $ limitWindows 12
+           $ windowNavigation
+           $ addTabs shrinkText myTabTheme
+           $ subLayout [] (smartBorders Simplest)
+           $ mySpacing2 20
+           $ ResizableTall 1 (3/100) (1/2) []
+tall       = renamed [Replace "tall"]
            $ limitWindows 12
            $ windowNavigation
            $ addTabs shrinkText myTabTheme
            $ subLayout [] (smartBorders Simplest)
            $ mySpacing 20
            $ ResizableTall 1 (3/100) (1/2) []
-tall_nosp = renamed [Replace "tall_nosp"]
+tall_nosp = renamed [Replace "nosp"]
            $ windowNavigation
            $ addTabs shrinkText myTabTheme
            $ subLayout [] (smartBorders Simplest)
@@ -326,8 +333,8 @@ grid     = renamed [Replace "grid"]
            $ addTabs shrinkText myTabTheme
            $ subLayout [] (smartBorders Simplest)
            $ limitWindows 12
-           $ mySpacing 20
            $ mkToggle (single MIRROR)
+           $ mySpacing' 20 70
            $ Grid (16/10)
 floats   = renamed [Replace "floats"]
            $ windowNavigation
@@ -335,7 +342,7 @@ floats   = renamed [Replace "floats"]
            $ subLayout [] (smartBorders Simplest)
            $ limitWindows 20 simplestFloat
 spirals  = renamed [Replace "spirals"]
-           $ mySpacing' 0
+           $ mySpacing 0
            -- $ windowNavigation
            -- $ addTabs shrinkText myTabTheme
            -- $ subLayout [] (smartBorders Simplest)
@@ -345,14 +352,14 @@ threeCol = renamed [Replace "threeCol"]
            -- $ addTabs shrinkText myTabTheme
            -- $ subLayout [] (smartBorders Simplest)
            $ limitWindows 7
-           $ mySpacing' 4
+           $ mySpacing 4
            $ ThreeCol 1 (3/100) (1/2)
 threeRow = renamed [Replace "threeRow"]
            -- $ windowNavigation
            -- $ addTabs shrinkText myTabTheme
            -- $ subLayout [] (smartBorders Simplest)
            $ limitWindows 7
-           $ mySpacing' 4
+           $ mySpacing 4
            -- Mirror takes a layout and rotates it by 90 degrees.
            -- So we are applying Mirror to the ThreeCol layout.
            $ Mirror
@@ -371,10 +378,13 @@ myTabTheme = def { fontName            = myFont
                  , inactiveTextColor   = "#d0d0d0"
                  }
 
-myLayout = tall 
+myLayout = tall_small 
+       ||| tall 
        ||| tall_nosp 
---       ||| spirals 
 --       ||| floats
+--       ||| grid 
+--       ||| threeCol 
+--       ||| spirals 
 
 -- The layout hook
 myLayoutHook = mkToggle (NOBORDERS ?? FULL ?? EOT) $ (avoidStruts $ mouseResize $ windowArrange $ T.toggleLayouts floats $ mkToggle (NBFULL ?? NOBORDERS ?? EOT) myLayout)
@@ -431,6 +441,9 @@ myStartupHook = do
     spawnOnce "nitrogen --restore &"
     spawnOnce "redshift -l 50.51:4.20 &"
     spawnOnce "picom --config /home/mal/.config/picom.conf --experimental-backends &"
+    spawnOnce "~/bin/conky_launch &"
+    spawnOnce "/usr/lib/notification-daemon-1.0/notification-daemon &"
+    spawnOnce "batsignal -f 100 -b"
     setWMName "LG3D"
 
 
